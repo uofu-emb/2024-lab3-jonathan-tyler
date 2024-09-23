@@ -27,7 +27,7 @@ void side_thread(void *params)
             cval = counter;
             xSemaphoreGive(semaphore);
 
-            printf("hello world from %s! Count %d\n", "thread", cval);
+            printf("hello world from % 6s! Count % d\n", "thread", cval);
         }
 	}
 }
@@ -42,7 +42,7 @@ void main_thread(void *params)
             cval = counter++;
             xSemaphoreGive(semaphore);
 
-            printf("hello world from %s! Count %d\n", "main", cval);
+            printf("hello world from % 6s! Count % d\n", "main", cval);
         }
         on = !on;
 	}
