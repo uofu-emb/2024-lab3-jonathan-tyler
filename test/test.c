@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <unity.h>
 #include "unity_config.h"
+#include "util.h"
 
 void setUp(void) {}
 

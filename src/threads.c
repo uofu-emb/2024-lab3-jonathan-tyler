@@ -6,6 +6,8 @@
 #include <pico/multicore.h>
 #include <pico/cyw43_arch.h>
 
+#include "util.h"
+
 #define MAIN_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
 #define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 
@@ -19,16 +21,9 @@ int on;
 
 void side_thread(void *params)
 {
-    int cval;
 	while (1) {
         vTaskDelay(100);
-        if (xSemaphoreTake(semaphore, portMAX_DELAY) == pdTRUE) {
-            counter += counter + 1;
-            cval = counter;
-            xSemaphoreGive(semaphore);
-
-            printf("hello world from % 6s! Count % d\n", "thread", cval);
-        }
+        thread_update_print(&counter, semaphore);
 	}
 }
 
@@ -38,12 +33,7 @@ void main_thread(void *params)
 	while (1) {
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, on);
         vTaskDelay(100);
-        if (xSemaphoreTake(semaphore, portMAX_DELAY) == pdTRUE) {
-            cval = counter++;
-            xSemaphoreGive(semaphore);
-
-            printf("hello world from % 6s! Count % d\n", "main", cval);
-        }
+        main_update_print(&counter, semaphore);
         on = !on;
 	}
 }
