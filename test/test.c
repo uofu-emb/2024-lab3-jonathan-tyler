@@ -1,9 +1,22 @@
 #include <stdio.h>
+#include <FreeRTOS.h>
+#include <semphr.h>
+#include <task.h>
+
 #include <pico/stdlib.h>
+#include <pico/multicore.h>
+#include <pico/cyw43_arch.h>
+
 #include <stdint.h>
 #include <unity.h>
 #include "unity_config.h"
+
 #include "util.h"
+
+#define TEST_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
+#define TEST_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#define TEST_RUNNER_PRIORITY      ( tskIDLE_PRIORITY + 2UL )
+#define TEST_RUNNER_STACK_SIZE configMINIMAL_STACK_SIZE
 
 void setUp(void) {}
 
@@ -23,14 +36,25 @@ void test_multiplication(void)
     TEST_ASSERT_TRUE_MESSAGE(z == 5, "Multiplication of two integers returned incorrect value.");
 }
 
+void runner_thread (__unused void *args)
+{
+    for (;;) {
+        printf("Starting test run.\n");
+        UNITY_BEGIN();
+        RUN_TEST(test_variable_assignment);
+        RUN_TEST(test_multiplication);
+        UNITY_END();
+        sleep_ms(5000);
+    }
+}
+
 int main (void)
 {
     stdio_init_all();
-    sleep_ms(5000); // Give time for TTY to attach.
-    printf("Start tests\n");
-    UNITY_BEGIN();
-    RUN_TEST(test_variable_assignment);
-    RUN_TEST(test_multiplication);
-    sleep_ms(5000);
-    return UNITY_END();
+    hard_assert(cyw43_arch_init() == PICO_OK);
+    printf("Launching runner\n");
+    xTaskCreate(runner_thread, "TestRunner",
+                TEST_RUNNER_STACK_SIZE, NULL, TEST_RUNNER_PRIORITY, NULL);
+    vTaskStartScheduler();
+    return 0;
 }
