@@ -23,7 +23,7 @@ void side_thread(void *params)
 {
 	while (1) {
         vTaskDelay(100);
-        thread_update_print(&counter, semaphore);
+        counter_update_print("thread", &counter, semaphore, NULL);
 	}
 }
 
@@ -33,7 +33,7 @@ void main_thread(void *params)
 	while (1) {
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, on);
         vTaskDelay(100);
-        main_update_print(&counter, semaphore);
+        counter_update_print("main", &counter, semaphore, NULL);
         on = !on;
 	}
 }
