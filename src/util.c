@@ -8,7 +8,7 @@
 
 int counter_update_print(char* name, int* counter, SemaphoreHandle_t semaphore, int* counter_out) {
     int cval;
-    if (xSemaphoreTake(semaphore, portMAX_DELAY) == pdTRUE) {
+    if (xSemaphoreTake(semaphore, 100) == pdTRUE) {
         cval = (*counter)++;
         xSemaphoreGive(semaphore);
 
