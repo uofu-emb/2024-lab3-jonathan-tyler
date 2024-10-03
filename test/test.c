@@ -18,22 +18,48 @@
 #define TEST_RUNNER_PRIORITY      ( tskIDLE_PRIORITY + 2UL )
 #define TEST_RUNNER_STACK_SIZE configMINIMAL_STACK_SIZE
 
-void setUp(void) {}
+SemaphoreHandle_t semaphore;
+int counter;
 
-void tearDown(void) {}
-
-void test_variable_assignment()
+void setUp(void)
 {
-    int x = 1;
-    TEST_ASSERT_TRUE_MESSAGE(x == 1,"Variable assignment failed.");
+    semaphore = xSemaphoreCreateCounting(1, 1);
+    counter = 0;
 }
 
-void test_multiplication(void)
+void tearDown(void)
 {
-    int x = 30;
-    int y = 6;
-    int z = x / y;
-    TEST_ASSERT_TRUE_MESSAGE(z == 5, "Multiplication of two integers returned incorrect value.");
+    vSemaphoreDelete(semaphore);
+}
+
+void test_unavailable(void)
+{
+    int counter_out = 2;
+    xSemaphoreTake(semaphore, portMAX_DELAY);
+    for (int i = 0; i < 32; i++) {
+        int result = counter_update_print("", &counter, semaphore, NULL);
+        TEST_ASSERT_EQUAL(counter, 0);
+        TEST_ASSERT_EQUAL(result, 0);
+        result = counter_update_print("", &counter, semaphore, &counter_out);
+        TEST_ASSERT_EQUAL(counter, 0);
+        TEST_ASSERT_EQUAL(result, 0);
+        TEST_ASSERT_EQUAL(counter_out, 2);
+    }
+    xSemaphoreGive(semaphore);
+}
+
+void test_counter_update(void)
+{
+    int counter_out = 2;
+    for (int i = 0; i < 32; i++) {
+        int result = counter_update_print("", &counter, semaphore, NULL);
+        TEST_ASSERT_EQUAL(counter, 2*i+1);
+        TEST_ASSERT_GREATER_THAN(result, 0);
+        result = counter_update_print("", &counter, semaphore, &counter_out);
+        TEST_ASSERT_EQUAL(counter, 2*i+2);
+        TEST_ASSERT_GREATER_THAN(result, 0);
+        TEST_ASSERT_EQUAL(counter_out, 2*i+1);
+    }
 }
 
 void runner_thread (__unused void *args)
@@ -41,8 +67,8 @@ void runner_thread (__unused void *args)
     for (;;) {
         printf("Starting test run.\n");
         UNITY_BEGIN();
-        RUN_TEST(test_variable_assignment);
-        RUN_TEST(test_multiplication);
+        RUN_TEST(test_unavailable);
+        RUN_TEST(test_counter_update);
         UNITY_END();
         sleep_ms(5000);
     }
