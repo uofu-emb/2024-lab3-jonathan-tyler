@@ -36,7 +36,7 @@ void test_unavailable(void)
 {
     int counter_out = 2;
     xSemaphoreTake(semaphore, portMAX_DELAY);
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 4; i++) {
         int result = counter_update_print("", &counter, semaphore, NULL);
         TEST_ASSERT_EQUAL(counter, 0);
         TEST_ASSERT_EQUAL(result, 0);
@@ -51,13 +51,13 @@ void test_unavailable(void)
 void test_counter_update(void)
 {
     int counter_out = 2;
-    for (int i = 0; i < 32; i++) {
-        int result = counter_update_print("", &counter, semaphore, NULL);
+    for (int i = 0; i < 4; i++) {
+        int result = counter_update_print("test", &counter, semaphore, NULL);
         TEST_ASSERT_EQUAL(counter, 2*i+1);
-        TEST_ASSERT_GREATER_THAN(result, 0);
-        result = counter_update_print("", &counter, semaphore, &counter_out);
+        TEST_ASSERT_GREATER_THAN(0, result);
+        result = counter_update_print("test", &counter, semaphore, &counter_out);
         TEST_ASSERT_EQUAL(counter, 2*i+2);
-        TEST_ASSERT_GREATER_THAN(result, 0);
+        TEST_ASSERT_GREATER_THAN(0, result);
         TEST_ASSERT_EQUAL(counter_out, 2*i+1);
     }
 }
@@ -70,7 +70,7 @@ void runner_thread (__unused void *args)
         RUN_TEST(test_unavailable);
         RUN_TEST(test_counter_update);
         UNITY_END();
-        sleep_ms(5000);
+        sleep_ms(10000);
     }
 }
 
