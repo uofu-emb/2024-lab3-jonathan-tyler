@@ -21,3 +21,33 @@ void task2(void *args) {
     //make sures it does not drop off the stack.
     while (1);
 }
+
+void orphaned_lock(void *args) {
+    SemaphoreHandle_t semaphore = (SemaphoreHandle_t) args;
+    int counter = 0;
+    while (1) {
+        //takes the sema
+        xSemaphoreTake(semaphore, portMAX_DELAY);
+        counter++;
+        if (counter % 2) {
+            continue;
+        }
+        printf("Count %d\n", counter);
+        xSemaphoreGive(semaphore);
+    }
+}
+
+void count_evens(void *args) {
+    SemaphoreHandle_t semaphore = (SemaphoreHandle_t) args;
+    int counter = 0;
+    while (1) {
+        //takes the sema
+        xSemaphoreTake(semaphore, portMAX_DELAY);
+        counter++;
+        if (counter % 2 == 0) {
+            printf("Count %d\n", counter);
+        }
+        xSemaphoreGive(semaphore);
+        vTaskDelay(500);
+    }
+}
