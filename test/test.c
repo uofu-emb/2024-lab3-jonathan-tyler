@@ -12,24 +12,29 @@
 #include "unity_config.h"
 
 #include "util.h"
+#include "deadlock.h"
 
 #define TEST_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
 #define TEST_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define TEST_RUNNER_PRIORITY      ( tskIDLE_PRIORITY + 2UL )
 #define TEST_RUNNER_STACK_SIZE configMINIMAL_STACK_SIZE
 
+struct semaphores sems;
 SemaphoreHandle_t semaphore;
 int counter;
 
 void setUp(void)
 {
-    semaphore = xSemaphoreCreateCounting(1, 1);
+    sems.semaA = xSemaphoreCreateCounting(1, 1);
+    sems.semaB = xSemaphoreCreateCounting(1, 1);
+    semaphore = sems.semaA;
     counter = 0;
 }
 
 void tearDown(void)
 {
-    vSemaphoreDelete(semaphore);
+    vSemaphoreDelete(sems.semaA);
+    vSemaphoreDelete(sems.semaB);
 }
 
 void test_unavailable(void)
@@ -62,6 +67,20 @@ void test_counter_update(void)
     }
 }
 
+void test_deadlock(__unused void *args)
+{
+    TaskHandle_t taskA, taskB;
+    xTaskCreate(task1, "task1",
+                TEST_TASK_STACK_SIZE, &sems, TEST_TASK_PRIORITY, &taskA);
+    xTaskCreate(task2, "task2",
+                TEST_TASK_STACK_SIZE, &sems, TEST_TASK_PRIORITY, &taskB);
+    vTaskDelay(5000);
+    TEST_ASSERT_MESSAGE(eTaskStateGet(taskA) == eBlocked, "First task is not blocked");
+    TEST_ASSERT_MESSAGE(eTaskStateGet(taskB) == eBlocked, "Second task is not blocked");
+    vTaskDelete(taskA);
+    vTaskDelete(taskB);
+}
+
 void runner_thread (__unused void *args)
 {
     for (;;) {
@@ -69,6 +88,7 @@ void runner_thread (__unused void *args)
         UNITY_BEGIN();
         RUN_TEST(test_unavailable);
         RUN_TEST(test_counter_update);
+        RUN_TEST(test_deadlock);
         UNITY_END();
         sleep_ms(10000);
     }
