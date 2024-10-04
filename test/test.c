@@ -84,8 +84,8 @@ void test_deadlock(__unused void *args)
 void test_orphaned_lock(__unused void *args)
 {
     TaskHandle_t orphanedTask;
-    xTaskCreate(orphaned_lock, "orphanedTask",
-                TEST_TASK_STACK_SIZE, &sems, TEST_TASK_PRIORITY, &orphanedTask);
+    xTaskCreate(orphaned_lock, "Orphaned task",
+                TEST_TASK_STACK_SIZE, semaphore, TEST_TASK_PRIORITY, &orphanedTask);
     vTaskDelay(1000);
     TEST_ASSERT_MESSAGE(eTaskStateGet(orphanedTask) == eBlocked, "Orphaned task did not block");
     vTaskDelete(orphanedTask);
@@ -95,7 +95,7 @@ void test_count_evens(__unused void *args)
 {
     TaskHandle_t countTask;
     xTaskCreate(count_evens, "Count task",
-                TEST_TASK_STACK_SIZE, &sems, TEST_TASK_PRIORITY, &countTask);
+                TEST_TASK_STACK_SIZE, semaphore, TEST_TASK_PRIORITY, &countTask);
     vTaskDelay(2000);
     TEST_ASSERT_MESSAGE(eTaskStateGet(countTask) != eBlocked, "Count task blocked");
     vTaskDelete(countTask);
