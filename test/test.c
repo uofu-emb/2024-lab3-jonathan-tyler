@@ -100,6 +100,7 @@ void test_count_evens(__unused void *args)
     TEST_ASSERT_MESSAGE(eTaskStateGet(countTask) != eBlocked, "Count task blocked");
     vTaskDelete(countTask);
 }
+
 void runner_thread (__unused void *args)
 {
     for (;;) {
